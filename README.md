@@ -1,5 +1,7 @@
 # Team Task Board (Kanban)
 
+![Team Task Board](Logo/screen.png)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Framework](https://img.shields.io/badge/Framework-Flask-green.svg)](#)
 
