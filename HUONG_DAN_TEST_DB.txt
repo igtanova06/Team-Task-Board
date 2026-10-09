@@ -1,0 +1,67 @@
+================================================================================
+          HƯỚNG DẪN CÀI ĐẶT & KIỂM TRA DATABASE (MEMBER 1) - TEAM TASK BOARD
+================================================================================
+
+1. CHUẨN BỊ
+- Mở SQL Server Management Studio (SSMS) hoặc Docker và dùng lệnh sau tạo database trống (do ORM chỉ tạo được bảng, ko tạo đc database):
+    CREATE DATABASE TeamTaskBoard;
+
+--------------------------------------------------------------------------------
+2. CÀI ĐẶT MÔI TRƯỜNG & THƯ VIỆN
+Mở terminal PowerShell tại thư mục dự án và chạy:
+
+    python -m venv .venv
+    .\.venv\Scripts\Activate.ps1
+    pip install -r requirements.txt
+
+--------------------------------------------------------------------------------
+3. CẤU HÌNH FILE .env
+Tạo file tên là ".env" ở thư mục gốc dự án (ngang hàng với run.py).
+Điền nội dung theo 1 trong 2 cách sau tùy theo cài đặt SQL Server trên máy bạn:
+
+--- CÁCH A: Dùng tài khoản 'sa' (SQL Server Authentication) ---
+SECRET_KEY=dev-secret-key (dùng key gì cũng được)
+DATABASE_URL=mssql+pyodbc://sa:[password_user_sa]@[your_sever_name]/TeamTaskBoard?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
+
+--- CÁCH B: Dùng Windows Authentication (Không cần mật khẩu) ---
+SECRET_KEY=dev-secret-key
+DATABASE_URL=mssql+pyodbc://@localhost\SQLEXPRESS/TeamTaskBoard?driver=ODBC+Driver+18+for+SQL+Server&trusted_connection=yes&TrustServerCertificate=yes
+
+* LƯU Ý KHI SỬA CHUỖI KẾT NỐI:
+- [password_user_sa]: sửa lại thành mật khẩu user "sa" trong SQLSEVER
+- [your_sever_name]: Sửa lại đúng tên Server Name trên máy bạn (ví dụ: localhost, .\SQLEXPRESS, LAPTOP-ABC\SQLSEVER...).
+- Viết chuỗi DATABASE_URL trên đúng 1 DÒNG DUY NHẤT.
+- Nếu dùng Driver 17 thì sửa số 18 thành 17.
+
+--------------------------------------------------------------------------------
+4. CÁC LỆNH CHẠY TEST (THEO THỨ TỰ) (chạy khi đã bật môi trường .venv)
+
+Bước 4.1: Kiểm tra kết nối tới SQL Server
+    python check_connection.py
+    => Nếu hiện "Connection OK" là kết nối thành công.
+
+Bước 4.2: Tự động tạo 5 bảng vào SQL Server
+    flask --app run db upgrade
+    => Mở SSMS sẽ thấy đủ 5 bảng: users, boards, board_memberships, tasks, comments.
+
+Bước 4.3: Nạp dữ liệu mẫu
+    python seed.py
+    => Sẽ tự động nạp: 4 Users (Alex, Ben, Chris, David), 1 Board ("Website Development"),
+       4 Memberships (Alex: owner, Ben/Chris: member, David: viewer), 8 Tasks, 5 Comments.
+    => Mật khẩu đăng nhập mặc định của tất cả User là: Password123
+
+Bước 4.4: Chạy bộ kiểm thử tự động (Unit Test)
+    python -m pytest -v
+    => Toàn bộ 7/7 bài test phải PASSED (màu xanh lá).
+
+
+
+--------------------------------------------------------------------------------
+5. XỬ LÝ LỖI NHANH (NẾU GẶP)
+- Lỗi "SSL Provider: certificate verify failed":
+  => Thêm "&TrustServerCertificate=yes" vào cuối DATABASE_URL.
+- Lỗi "Data source name not found":
+  => Kiểm tra tên ODBC Driver trong máy bằng lệnh: python -c "import pyodbc; print(pyodbc.drivers())"
+- Lỗi "Cannot open database":
+  => Chưa tạo database trong SSMS, chạy: CREATE DATABASE TeamTaskBoard;
+================================================================================
