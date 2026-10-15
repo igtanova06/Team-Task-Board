@@ -49,53 +49,6 @@ A web-based Kanban task management application built with **Flask** for small te
 
 ---
 
-## Running the app
-
-```bash
-pip install -r requirements.txt
-# .env: SECRET_KEY=...  DATABASE_URL=mssql+pyodbc://...   (see HUONG_DAN_TEST_DB.txt)
-flask --app run db upgrade      # create the 5 tables
-python seed.py                  # sample data (password for every user: Password123)
-python run.py                   # http://127.0.0.1:5000  -> sign in as alex / ben / chris / david
-```
-
-If `DATABASE_URL` is not set the app falls back to a local SQLite file (`instance/dev.db`) so the UI can be tried without SQL Server.
-
-## Kanban board (Week 2-3)
-
-- **Pages**: `/login`, `/boards/<id>` (Jinja + Bootstrap 5, theme "Agile Slate").
-- **AJAX**: the board is loaded and changed through the JSON API with `fetch`; the CSRF token is sent in `X-CSRFToken`.
-- **Drag & drop**: SortableJS (mouse + touch). Dropping a card calls `PATCH /api/tasks/<id>/status` optimistically and rolls back with an error toast if the request fails. Cards inside a column are sorted by priority, then deadline.
-- **Validation**: Flask-WTF forms on the server (`app/forms.py`), mirrored inline on the client. Errors come back as `422 {"error", "errors": {field: [msg]}}`.
-
-### API
-
-| Method | Endpoint | Purpose |
-| :--- | :--- | :--- |
-| GET | `/api/boards/<id>` | board, my role, members, tasks |
-| POST | `/api/boards/<id>/tasks` | create task |
-| GET | `/api/tasks/<id>` | task + comments |
-| PUT / PATCH | `/api/tasks/<id>` | update task (partial allowed) |
-| PATCH | `/api/tasks/<id>/status` | move task between columns |
-| DELETE | `/api/tasks/<id>` | delete task |
-| POST | `/api/tasks/<id>/comments` | add comment |
-
-### Authorization (checked on the server for every request)
-
-| Role | View | Create / edit / move / comment | Delete task |
-| :--- | :---: | :---: | :--- |
-| owner | yes | yes | any task |
-| member | yes | yes | only tasks they created |
-| viewer | yes | no | no |
-
-Non-members get `403`; unauthenticated API calls get `401`. Assignees must be an owner/member of the board.
-
-### Tests
-
-`python -m pytest -v` (models + API, in-memory SQLite).
-
----
-
 ## License
 
 Distributed under the [MIT License](LICENSE).
