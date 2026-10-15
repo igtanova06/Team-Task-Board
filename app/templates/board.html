@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}{{ board.name }} · Team Task Board{% endblock %}
+{% block body_attrs %}data-board-id="{{ board.id }}" data-role="{{ role }}"{% endblock %}
+
+{% block content %}
+<header class="ttb-board-header">
+  <div class="container-fluid px-3 px-lg-4 d-flex flex-wrap align-items-center justify-content-between gap-2 py-2">
+    <div class="d-flex align-items-center gap-2">
+      <a href="{{ url_for('pages.index') }}" class="text-decoration-none ttb-meta">Boards</a>
+      <i class="bi bi-chevron-right ttb-meta small"></i>
+      <h1 class="h6 fw-semibold mb-0">{{ board.name }}</h1>
+      <span class="badge-role badge-role-{{ role }}">{{ role|capitalize }}</span>
+      {% if role == 'viewer' %}<span class="ttb-meta"><i class="bi bi-eye me-1"></i>Read-only</span>{% endif %}
+    </div>
+    <div class="ttb-avatar-stack" id="memberStack" aria-label="Board members"></div>
+  </div>
+</header>
+
+<section class="ttb-toolbar">
+  <div class="container-fluid px-3 px-lg-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <div class="ttb-search">
+        <i class="bi bi-search"></i>
+        <input type="search" id="filterSearch" class="form-control" placeholder="Filter tasks by title…" aria-label="Filter tasks">
+      </div>
+      <select id="filterMember" class="form-select ttb-select" aria-label="Filter by member"><option value="all">All Members</option></select>
+      <select id="filterPriority" class="form-select ttb-select" aria-label="Filter by priority">
+        <option value="all">All Priorities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" id="filterReset"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset</button>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="ttb-stats d-none d-sm-inline-flex" id="boardStats" title="Cards are sorted by priority, then deadline"></span>
+      {% if role != 'viewer' %}
+      <button class="btn btn-primary" id="btnAdd"><i class="bi bi-plus-lg me-1"></i>Add Task</button>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<main class="ttb-workspace">
+  <div class="ttb-board {% if role != 'viewer' %}can-drag{% endif %}" id="board" aria-live="polite" aria-label="Kanban board">
+    {% for i in range(4) %}
+    <section class="ttb-column"><div class="ttb-skel ttb-skel-title"></div>
+      <div class="ttb-skel ttb-skel-card"></div><div class="ttb-skel ttb-skel-card"></div></section>
+    {% endfor %}
+  </div>
+</main>
+
+<!-- Task detail -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="dTitle" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="d-flex align-items-center gap-2"><span class="ttb-code" id="dCode"></span><span id="dPriority"></span></div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h2 class="h4 fw-bold mb-3" id="dTitle"></h2>
+        <div class="row g-4">
+          <div class="col-md-7">
+            <h3 class="ttb-section-label">Description</h3>
+            <p id="dDesc" class="mb-4" style="white-space:pre-wrap"></p>
+            <h3 class="ttb-section-label">Comments <span class="ttb-count" id="dCommentCount">0</span></h3>
+            <div id="dComments"></div>
+            <form id="commentForm" class="mt-2" novalidate>
+              <textarea class="form-control" id="commentInput" rows="2" maxlength="1000" placeholder="Write a comment…" aria-label="Write a comment"></textarea>
+              <div class="invalid-feedback" id="commentError"></div>
+              <div class="text-end mt-2"><button class="btn btn-primary btn-sm" type="submit" id="commentBtn">Comment</button></div>
+            </form>
+          </div>
+          <div class="col-md-5">
+            <div class="ttb-props">
+              <div>
+                <label class="ttb-meta" for="dStatus">Status</label>
+                <select id="dStatus" class="form-select form-select-sm"></select>
+              </div>
+              <div><span class="ttb-meta">Assignee</span><div id="dAssignee" class="d-flex align-items-center gap-2"></div></div>
+              <div><span class="ttb-meta">Deadline</span><div id="dDue"></div></div>
+              <div><span class="ttb-meta">Created</span><div id="dCreated" class="ttb-meta"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between" id="dFooter">
+        <div id="dDeleteArea"></div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-secondary" id="dEdit"><i class="bi bi-pencil me-1"></i>Edit</button>
+          <button class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create / edit task -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" id="taskForm" novalidate>
+      <div class="modal-header">
+        <h2 class="modal-title h6 fw-semibold" id="formTitle">Create Task</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-danger py-2 small d-none" id="formAlert" role="alert"></div>
+        <div class="mb-3">
+          <label class="form-label d-flex justify-content-between" for="fTitle"><span>Title <span class="text-danger">*</span></span><span class="ttb-meta" id="fTitleCount">0/200</span></label>
+          <input id="fTitle" name="title" class="form-control" maxlength="200" placeholder="e.g. Build Task API" autocomplete="off">
+          <div class="invalid-feedback"></div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="fDescription">Description</label>
+          <textarea id="fDescription" name="description" class="form-control" rows="3" maxlength="2000" placeholder="Short description…"></textarea>
+          <div class="invalid-feedback"></div>
+        </div>
+        <div class="row g-3">
+          <div class="col-6"><label class="form-label" for="fStatus">Status</label>
+            <select id="fStatus" name="status" class="form-select">
+              <option value="todo">To Do</option><option value="in_progress">In Progress</option><option value="review">Review</option><option value="done">Done</option>
+            </select><div class="invalid-feedback"></div></div>
+          <div class="col-6"><label class="form-label" for="fPriority">Priority</label>
+            <select id="fPriority" name="priority" class="form-select">
+              <option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option>
+            </select><div class="invalid-feedback"></div></div>
+          <div class="col-6"><label class="form-label" for="fAssignee">Assignee</label>
+            <select id="fAssignee" name="assigned_to" class="form-select"></select><div class="invalid-feedback"></div></div>
+          <div class="col-6"><label class="form-label" for="fDeadline">Deadline</label>
+            <input id="fDeadline" name="deadline" type="date" class="form-control"><div class="invalid-feedback"></div></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="formSubmit">Create Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toasts"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="{{ url_for('static', filename='js/kanban.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · Team Task Board{% endblock %}
+{% block content %}
+<main class="ttb-auth">
+  <div class="ttb-auth-card text-center">
+    <div class="display-5 fw-bold text-primary">{{ code }}</div>
+    <p class="mb-4">{{ message }}</p>
+    <a class="btn btn-primary" href="{{ url_for('pages.index') }}">Back to my boards</a>
+  </div>
+</main>
+{% endblock %}
