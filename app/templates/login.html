@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Team Task Board{% endblock %}
+{% block nav %}{% endblock %}
+{% block content %}
+<main class="ttb-auth">
+  <div class="ttb-auth-card">
+    <div class="text-center mb-4">
+      <span class="ttb-logo mx-auto mb-3" style="width:44px;height:44px;font-size:1.4rem"><i class="bi bi-kanban-fill"></i></span>
+      <h1 class="h4 fw-bold mb-1">Welcome back</h1>
+      <p class="ttb-meta mb-0">Sign in to Team Task Board</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="alert alert-{{ cat }} py-2 small" role="status">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+
+    <form method="post" novalidate>
+      {{ form.hidden_tag() }}
+      <div class="mb-3">
+        {{ form.identity.label(class="form-label") }}
+        {{ form.identity(class="form-control" ~ (" is-invalid" if form.identity.errors else ""), autofocus=true, autocomplete="username", placeholder="you@example.com") }}
+        {% for e in form.identity.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="mb-3">
+        {{ form.password.label(class="form-label") }}
+        <div class="input-group has-validation">
+          {{ form.password(class="form-control" ~ (" is-invalid" if form.password.errors else ""), autocomplete="current-password") }}
+          <button class="btn btn-secondary" type="button" id="togglePw" aria-label="Show password"><i class="bi bi-eye"></i></button>
+          {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+        </div>
+      </div>
+      <div class="form-check mb-3">
+        {{ form.remember(class="form-check-input") }}
+        {{ form.remember.label(class="form-check-label small") }}
+      </div>
+      <button class="btn btn-primary w-100" type="submit">Sign in</button>
+    </form>
+    {% if config.DEBUG %}<p class="ttb-meta text-center mt-3 mb-0">Dev seed accounts: alex / ben / chris / david</p>{% endif %}
+  </div>
+</main>
+<script>
+  document.getElementById('togglePw').addEventListener('click', function () {
+    var i = document.querySelector('input[name=password]'), show = i.type === 'password';
+    i.type = show ? 'text' : 'password';
+    this.innerHTML = '<i class="bi bi-' + (show ? 'eye-slash' : 'eye') + '"></i>';
+  });
+</script>
+{% endblock %}
