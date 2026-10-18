@@ -49,6 +49,13 @@ A web-based Kanban task management application built with **Flask** for small te
 
 ---
 
+## Kanban UI & demo
+
+Run `python run.py` (checks the database, creates tables, seeds demo data when empty) and sign in as `alex` / `Password123`.
+Folder layout, extra endpoints and the demo checklist: [docs/kanban_ui.md](docs/kanban_ui.md).
+
+---
+
 ## License
 
 Distributed under the [MIT License](LICENSE).
