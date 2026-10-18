@@ -32,7 +32,25 @@ class ApiError(Exception):
 # ------------------------------------------------------------------ authentication
 def authenticated_user():
     """Return the logged-in user or None. (Extension point for Bearer JWT.)"""
-    return current_user if current_user.is_authenticated else None
+    if current_user and current_user.is_authenticated:
+        return current_user
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+        try:
+            from flask_jwt_extended import decode_token
+            decoded = decode_token(token)
+            uid = decoded.get("sub")
+            if uid is not None:
+                from app.models import User
+                u = db.session.get(User, int(uid))
+                if u:
+                    from flask_login import login_user
+                    login_user(u)
+                    return u
+        except Exception:
+            return None
+    return None
 
 
 @api.before_request
@@ -125,3 +143,5 @@ def require(allowed, message="You do not have permission to do that."):
 
 def is_board_member(board_id, user_id):
     return BoardMembership.query.filter_by(board_id=board_id, user_id=user_id).first() is not None
+
+
