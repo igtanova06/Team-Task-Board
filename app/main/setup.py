@@ -30,12 +30,11 @@ def _wants_json():
 def init_web(app):
     from app.models import User
     from app.api.guards import ApiError
-    from app.auth.web import web_auth
     from app.main import main
 
     csrf.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = "web_auth.login"
+    login_manager.login_view = "auth.login"
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -44,10 +43,10 @@ def init_web(app):
 
     @login_manager.unauthorized_handler
     def unauthorized():
-        return redirect(url_for("web_auth.login", next=request.full_path.rstrip("?")))
+        return redirect(url_for("auth.login", next=request.full_path.rstrip("?")))
 
-    app.register_blueprint(web_auth)
     app.register_blueprint(main)
+
 
     @app.before_request
     def csrf_for_cookie_sessions():

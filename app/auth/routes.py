@@ -5,7 +5,7 @@ from flask_jwt_extended import create_access_token
 from sqlalchemy import or_, func
 
 from app.auth import auth
-from app.auth.forms import LoginForm, RegisterForm
+from app.auth.forms import LoginForm, RegisterForm, ChangePasswordForm
 from app.extensions import db
 from app.models import User
 
@@ -17,6 +17,7 @@ def safe_next(target):
 
 
 @auth.route("/register", methods=["GET", "POST"])
+@auth.route("/auth/register", methods=["GET", "POST"])
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
@@ -81,12 +82,13 @@ def register():
         db.session.commit()
 
         flash("Account created successfully! Please sign in with your new credentials.", "success")
-        return redirect(url_for("web_auth.login"))
+        return redirect(url_for("auth.login"))
 
     return render_template("kanban/register.html", form=form), (422 if form.errors else 200)
 
 
 @auth.route("/login", methods=["GET", "POST"])
+@auth.route("/auth/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
@@ -114,13 +116,101 @@ def login():
 
         return jsonify(detail="Incorrect email/username or password."), 401
 
-    # Browser GET/POST fallback redirects to or uses web_auth
-    return redirect(url_for("web_auth.login"))
+    # Browser Web Form submission (session cookie)
+    form = LoginForm()
+    if form.validate_on_submit():
+        ident = form.identity.data.strip().lower()
+        user = User.query.filter(
+            or_(func.lower(User.email) == ident, func.lower(User.username) == ident)
+        ).first()
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember.data)
+            return redirect(safe_next(request.args.get("next")) or url_for("main.index"))
+        # Same error message for unknown user / wrong password to avoid account enumeration
+        form.password.errors.append("Incorrect email/username or password.")
+
+    return render_template("kanban/login.html", form=form), (422 if form.errors else 200)
 
 
 @auth.route("/logout", methods=["GET", "POST"])
+@auth.route("/auth/logout", methods=["GET", "POST"])
 def logout():
     if current_user.is_authenticated:
         logout_user()
         flash("You have been signed out.", "info")
-    return redirect(url_for("web_auth.login"))
+    return redirect(url_for("auth.login"))
+
+
+@auth.route("/change-password", methods=["GET", "POST"])
+@auth.route("/auth/change-password", methods=["GET", "POST"])
+def change_password():
+    # Resolve user from session cookie or Bearer JWT token
+    user = current_user if current_user.is_authenticated else None
+    if not user and request.headers.get("Authorization", "").startswith("Bearer "):
+        try:
+            from flask_jwt_extended import decode_token
+            decoded = decode_token(request.headers.get("Authorization").split(" ", 1)[1].strip())
+            uid = decoded.get("sub")
+            if uid is not None:
+                user = db.session.get(User, int(uid))
+                if user:
+                    login_user(user)
+        except Exception:
+            pass
+
+    if not user:
+        if request.is_json:
+            return jsonify(detail="Authentication required."), 401
+        return redirect(url_for("auth.login", next=request.path))
+
+    # JSON API client support
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        current_password = data.get("current_password") or ""
+        new_password = data.get("new_password") or ""
+        confirm_password = data.get("confirm_password") or new_password
+
+        errors = {}
+        if not current_password:
+            errors["current_password"] = ["Current password is required."]
+        elif not user.check_password(current_password):
+            errors["current_password"] = ["Incorrect current password."]
+
+        if not new_password or len(new_password) < 6:
+            errors["new_password"] = ["New password must be at least 6 characters."]
+        elif new_password == current_password:
+            errors["new_password"] = ["New password must be different from current password."]
+
+        if confirm_password != new_password:
+            errors["confirm_password"] = ["New passwords must match."]
+
+        if errors:
+            return jsonify(detail="Validation failed.", errors=errors), 422
+
+        user.set_password(new_password)
+        db.session.commit()
+        return jsonify(message="Password changed successfully."), 200
+
+    # Browser Web Form submission (session cookie)
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        if not user.check_password(form.current_password.data):
+            form.current_password.errors.append("Incorrect current password.")
+            return render_template("kanban/change_password.html", form=form), 422
+
+        if form.new_password.data == form.current_password.data:
+            form.new_password.errors.append("New password must be different from current password.")
+            return render_template("kanban/change_password.html", form=form), 422
+
+        user.set_password(form.new_password.data)
+        db.session.commit()
+
+        # Require the user to re-authenticate with the new password
+        logout_user()
+        flash("Your password has been changed successfully! Please sign in with your new password.", "success")
+        return redirect(url_for("auth.login"))
+
+    return render_template("kanban/change_password.html", form=form), (422 if form.errors else 200)
+
+
+

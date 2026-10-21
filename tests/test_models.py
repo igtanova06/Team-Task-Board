@@ -128,3 +128,46 @@ def test_cascade_delete_task(app):
 
     assert Task.query.count() == 0
     assert Comment.query.count() == 0
+
+
+def test_board_m2m_and_helpers(app):
+    """Verify direct Many-to-Many relationships and Board/Membership/User helper methods."""
+    user = User(username="alice", email="alice@example.com")
+    user.set_password("Password123")
+    board = Board(name="Project X", description="Test board description")
+    db.session.add_all([user, board])
+    db.session.flush()
+
+    mem = BoardMembership(user_id=user.id, board_id=board.id, role=Role.OWNER)
+    db.session.add(mem)
+    db.session.commit()
+
+    # Direct Many-to-Many relationship access
+    assert user in board.members
+    assert board in user.boards
+
+    # Board helper methods
+    assert board.is_owner(user.id) is True
+    assert board.is_member(user.id) is True
+    assert board.has_access(user.id) is True
+    assert board.get_role(user.id) == Role.OWNER
+    assert board.owner_count() == 1
+    assert board.is_owner(9999) is False
+    assert board.get_role(9999) is None
+
+    # Serialization helpers
+    b_dict = board.to_dict()
+    assert b_dict["id"] == board.id
+    assert b_dict["name"] == "Project X"
+    assert b_dict["created_at"].endswith("Z")
+
+    m_dict = mem.to_dict()
+    assert m_dict["user_id"] == user.id
+    assert m_dict["username"] == "alice"
+    assert m_dict["role"] == Role.OWNER
+    assert m_dict["joined_at"].endswith("Z")
+
+    u_dict = user.to_dict()
+    assert u_dict["username"] == "alice"
+    assert u_dict["email"] == "alice@example.com"
+
