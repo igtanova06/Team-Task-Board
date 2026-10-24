@@ -136,6 +136,18 @@ def can_delete_task(role):
     return role == Role.OWNER
 
 
+def can_manage_board(role):
+    return role == Role.OWNER
+
+
+def can_manage_members(role):
+    return role == Role.OWNER
+
+
+def can_remove_member(role, target_uid, current_uid):
+    return role == Role.OWNER or target_uid == current_uid
+
+
 def require(allowed, message="You do not have permission to do that."):
     if not allowed:
         raise ApiError(403, message)
@@ -143,5 +155,6 @@ def require(allowed, message="You do not have permission to do that."):
 
 def is_board_member(board_id, user_id):
     return BoardMembership.query.filter_by(board_id=board_id, user_id=user_id).first() is not None
+
 
 

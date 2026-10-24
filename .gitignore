@@ -6,3 +6,6 @@ __pycache__/
 instance/
 .pytest_cache/
 .agents/rules/
+.venv/
+ponytail/
+.ponytail

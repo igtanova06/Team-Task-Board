@@ -24,7 +24,7 @@ def apply_defaults(app):
 
 
 def _wants_json():
-    return request.path.startswith("/api/")
+    return request.path.startswith("/api/") or request.is_json
 
 
 def init_web(app):
@@ -47,12 +47,13 @@ def init_web(app):
 
     app.register_blueprint(main)
 
-
     @app.before_request
     def csrf_for_cookie_sessions():
         # Browser requests (session cookie) must carry the CSRF token. Requests that authenticate
-        # with an `Authorization: Bearer ...` header (API clients / Member 2's JWT) are not cookie
-        # based, so CSRF does not apply to them.
+        # with an `Authorization: Bearer ...` header, or JSON API login/register (Postman/JWT clients),
+        # are not cookie-based sessions, so CSRF does not apply to them.
+        if request.path in ("/auth/login", "/auth/register", "/login", "/register") and request.is_json:
+            return
         if (request.method in UNSAFE and app.config.get("WTF_CSRF_ENABLED", True)
                 and not request.headers.get("Authorization", "").startswith("Bearer ")):
             csrf.protect()

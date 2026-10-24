@@ -39,19 +39,6 @@ def _deadline(d):
     return datetime(d.year, d.month, d.day) if d else None
 
 
-@api.get("/boards/<int:board_id>")
-def get_board(board_id):
-    board, role = board_context(board_id)
-    members = BoardMembership.query.filter_by(board_id=board_id).order_by(BoardMembership.id).all()
-    return jsonify({
-        "board": {"id": board.id, "name": board.name, "description": board.description or ""},
-        "role": role,
-        "me": user_dict(current_user),
-        "can_create": can_create_task(role),
-        "members": [{**user_dict(m.user), "role": m.role} for m in members],
-    })
-
-
 @api.post("/boards/<int:board_id>/tasks")
 def create_task(board_id):
     _, role = board_context(board_id)

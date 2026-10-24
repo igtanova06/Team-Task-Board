@@ -48,3 +48,31 @@ def comment_dict(c):
         "updated_at": iso(c.updated_at),
         "author": user_dict(c.author),
     }
+
+
+def board_summary_dict(b, role=None):
+    data = {
+        "id": b.id,
+        "name": b.name,
+        "description": b.description or "",
+        "created_at": iso(b.created_at),
+        "updated_at": iso(b.updated_at),
+        "task_count": len(b.tasks),
+        "member_count": len(b.members),
+    }
+    if role is not None:
+        data["role"] = role
+    return data
+
+
+def member_dict(m):
+    return {
+        "id": m.id,
+        "user_id": m.user_id,
+        "username": m.user.username if m.user else None,
+        "email": m.user.email if m.user else None,
+        "board_id": m.board_id,
+        "role": m.role,
+        "joined_at": iso(m.joined_at),
+    }
+
