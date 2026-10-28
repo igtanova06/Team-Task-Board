@@ -58,3 +58,20 @@ Other commands: `python run.py --reseed` (wipe + seed again, asks for `YES`; add
 Accounts (password `Password123`): `alex` owner, `ben` / `chris` members, `david` viewer.
 
 Tests: `python -m pytest -v` (in-memory SQLite).
+
+## Board management UI (boards list, board settings, members)
+
+Pages / hooks (all data via Fetch/AJAX against `docs/board_and_member_api_plan.md` endpoints, CSRF header `X-CSRFToken`):
+
+| UI | Where | API |
+|---|---|---|
+| Board list (`/boards`, `/` redirects here) with search, empty state | `kanban/boards.html`, `boards.js` | `GET /api/boards` |
+| Navbar board switcher (every signed-in page) | `base.html`, `boards.js` | `GET /api/boards` |
+| Create board modal -> redirects into the new board | `_board_form_modal.html` | `POST /api/boards` |
+| Board settings (owner): rename / description / delete with confirmation | same modal | `PATCH` / `DELETE /api/boards/<id>` |
+| Leave board (list menu) | `boards.js` | `DELETE /api/boards/<id>/members/<me>` |
+| Members dialog: list, invite by username/email, change role, remove / leave | `_members_modal.html` | `GET /api/boards/<id>`, `POST .../members`, `PATCH/DELETE .../members/<uid>` |
+
+Rules enforced in the UI **and** the API: only owners see settings / invite / role / remove controls; the sole owner cannot demote or remove themselves (server message shown as a toast, select reverts); removing a member unassigns their tasks; non-members get 404.
+`boards.js` emits `ttb:board-saved`, `ttb:board-deleted`, `ttb:members-changed`; `kanban.js` listens to the last one to refresh avatars, assignee filter and cards.
+Tests: `tests/test_board_pages.py` plus the 37-step browser run described in the PR.

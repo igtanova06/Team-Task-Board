@@ -378,6 +378,8 @@
         api("GET", `/api/boards/${BOARD_ID}`), api("GET", `/api/boards/${BOARD_ID}/tasks`)]);
       Object.assign(state, { board: info.board, role: info.role, me: info.me, members: info.members, canCreate: info.can_create, tasks });
       $("#memberStack").innerHTML = state.members.map((m) => `<span class="ttb-avatar ${colorFor(m.id)}" title="${esc(m.username)} (${esc(m.role)})">${esc(initials(m.username))}</span>`).join("");
+      $("#filterMember").innerHTML = '<option value="all">All Members</option>';
+      filters.member = "all";
       $("#filterMember").insertAdjacentHTML("beforeend", state.members.map((m) => `<option value="${m.id}">${esc(m.username)}</option>`).join(""));
       renderBoard();
     } catch (err) {
@@ -434,6 +436,9 @@
       $("#filterSearch").value = ""; $("#filterMember").value = "all"; $("#filterPriority").value = "all"; refilter();
     });
   }
+
+  // member list changed in the Members dialog (invite / role / remove): refresh assignees, avatars and cards
+  window.addEventListener("ttb:members-changed", load);
 
   document.addEventListener("DOMContentLoaded", () => { bind(); load(); });
 })();

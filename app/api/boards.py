@@ -77,7 +77,7 @@ def get_board(board_id):
         "role": role,
         "me": user_dict(current_user),
         "can_create": can_create_task(role),
-        "members": [{**user_dict(m.user), "role": m.role} for m in members],
+        "members": [{**user_dict(m.user), "email": m.user.email, "role": m.role} for m in members],
     }), 200
 
 

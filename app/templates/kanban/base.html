@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <link href="{{ url_for('static', filename='kanban/css/kanban.css') }}" rel="stylesheet">
 </head>
-<body {% block body_attrs %}{% endblock %}>
+<body {% block body_attrs %}{% endblock %}{% if current_user.is_authenticated %} data-user-id="{{ current_user.id }}" data-username="{{ current_user.username }}"{% endif %}>
   {% block nav %}
   <nav class="navbar navbar-expand-md ttb-navbar sticky-top">
     <div class="container-fluid px-3 px-lg-4">
@@ -18,6 +18,14 @@
         <span class="ttb-logo"><i class="bi bi-kanban-fill"></i></span><span>Team Task Board</span>
       </a>
       {% if current_user.is_authenticated %}
+      <div class="dropdown ms-3" id="boardSwitcher">
+        <button class="btn btn-secondary btn-sm d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false" id="boardSwitcherBtn">
+          <i class="bi bi-grid-3x3-gap"></i><span class="d-none d-sm-inline">Boards</span><i class="bi bi-chevron-down small"></i>
+        </button>
+        <ul class="dropdown-menu shadow-sm ttb-switcher-menu" id="boardSwitcherMenu">
+          <li class="px-3 py-2 ttb-meta">Loading…</li>
+        </ul>
+      </div>
       <div class="ms-auto dropdown">
         <button class="btn btn-ghost d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
           <span class="ttb-avatar av-owner">{{ current_user.username[:2]|upper }}</span>
@@ -44,7 +52,13 @@
 
   {% block content %}{% endblock %}
 
+  {% if current_user.is_authenticated %}
+  {% include "kanban/_board_form_modal.html" %}
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toasts"></div>
+  {% endif %}
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  {% if current_user.is_authenticated %}<script src="{{ url_for('static', filename='kanban/js/boards.js') }}"></script>{% endif %}
   {% block scripts %}{% endblock %}
 </body>
 </html>
