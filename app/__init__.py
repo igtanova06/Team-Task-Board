@@ -1,4 +1,4 @@
-import os
+﻿import os
 from flask import Flask
 from config import config_by_name
 from app.extensions import db, migrate
@@ -30,5 +30,10 @@ def create_app(config_name=None):
     from app.auth import auth as auth_bp
     app.register_blueprint(auth_bp)
 
+    # Member 2 - Tieu chi 6: RBAC demo routes (prefix /m2/api)
+    from app.auth.member2_routes import m2_api
+    app.register_blueprint(m2_api, url_prefix='/m2/api')
+
     return app
+
 

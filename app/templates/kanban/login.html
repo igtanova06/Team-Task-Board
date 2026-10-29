@@ -1,5 +1,6 @@
-{% extends "kanban/base.html" %}
-{% block title %}Sign in · Team Task Board{% endblock %}
+﻿{% extends "kanban/base.html" %}
+{% from "kanban/_form_helpers.html" import render_field, render_password_field, render_checkbox, render_submit, render_flashes %}
+{% block title %}Sign in - Team Task Board{% endblock %}
 {% block nav %}{% endblock %}
 {% block content %}
 <main class="ttb-auth">
@@ -10,30 +11,14 @@
       <p class="ttb-meta mb-0">Sign in to Team Task Board</p>
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for cat, msg in messages %}<div class="alert alert-{{ cat }} py-2 small" role="status">{{ msg }}</div>{% endfor %}
-    {% endwith %}
+    {{ render_flashes() }}
 
     <form method="post" novalidate>
       {{ form.hidden_tag() }}
-      <div class="mb-3">
-        {{ form.identity.label(class="form-label") }}
-        {{ form.identity(class="form-control" ~ (" is-invalid" if form.identity.errors else ""), autofocus=true, autocomplete="username", placeholder="you@example.com") }}
-        {% for e in form.identity.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-      </div>
-      <div class="mb-3">
-        {{ form.password.label(class="form-label") }}
-        <div class="input-group has-validation">
-          {{ form.password(class="form-control" ~ (" is-invalid" if form.password.errors else ""), autocomplete="current-password") }}
-          <button class="btn btn-secondary" type="button" id="togglePw" aria-label="Show password"><i class="bi bi-eye"></i></button>
-          {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-        </div>
-      </div>
-      <div class="form-check mb-3">
-        {{ form.remember(class="form-check-input") }}
-        {{ form.remember.label(class="form-check-label small") }}
-      </div>
-      <button class="btn btn-primary w-100" type="submit">Sign in</button>
+      {{ render_field(form.identity, placeholder="you@example.com", autofocus=true) }}
+      {{ render_password_field(form.password, placeholder="Enter your password", toggle_id="togglePw") }}
+      {{ render_checkbox(form.remember) }}
+      {{ render_submit("Sign in", "btn btn-primary w-100") }}
     </form>
     <p class="ttb-meta text-center mt-3 mb-0">Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-decoration-none">Create an account</a></p>
     {% if config.DEBUG %}<p class="ttb-meta text-center mt-3 mb-0">Dev seed accounts: alex / ben / chris / david</p>{% endif %}
@@ -47,4 +32,3 @@
   });
 </script>
 {% endblock %}
-
