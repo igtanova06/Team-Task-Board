@@ -1,4 +1,5 @@
 {% extends "kanban/base.html" %}
+{% from "kanban/_form_helpers.html" import render_field, render_password_field, render_submit, render_flashes %}
 {% block title %}Register - Team Task Board{% endblock %}
 {% block nav %}{% endblock %}
 {% block content %}
@@ -10,44 +11,15 @@
       <p class="ttb-meta mb-0">Join Team Task Board</p>
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for cat, msg in messages %}
-          <div class="alert alert-{{ cat }} py-2 small" role="status">{{ msg }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+    {{ render_flashes() }}
 
     <form method="post" novalidate>
       {{ form.hidden_tag() }}
-      <div class="mb-3">
-        {{ form.username.label(class="form-label") }}
-        {{ form.username(class="form-control" ~ (" is-invalid" if form.username.errors else ""), autofocus=true, autocomplete="username", placeholder="e.g. john_doe") }}
-        {% for e in form.username.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-      </div>
-
-      <div class="mb-3">
-        {{ form.email.label(class="form-label") }}
-        {{ form.email(class="form-control" ~ (" is-invalid" if form.email.errors else ""), autocomplete="email", placeholder="you@example.com") }}
-        {% for e in form.email.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-      </div>
-
-      <div class="mb-3">
-        {{ form.password.label(class="form-label") }}
-        <div class="input-group has-validation">
-          {{ form.password(class="form-control" ~ (" is-invalid" if form.password.errors else ""), autocomplete="new-password", placeholder="At least 6 characters") }}
-          <button class="btn btn-secondary" type="button" id="togglePw" aria-label="Show password"><i class="bi bi-eye"></i></button>
-          {% for e in form.password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-        </div>
-      </div>
-
-      <div class="mb-3">
-        {{ form.confirm_password.label(class="form-label") }}
-        {{ form.confirm_password(class="form-control" ~ (" is-invalid" if form.confirm_password.errors else ""), autocomplete="new-password", placeholder="Repeat your password") }}
-        {% for e in form.confirm_password.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
-      </div>
-
-      <button class="btn btn-primary w-100" type="submit">Create Account</button>
+      {{ render_field(form.username, placeholder="e.g. john_doe", autofocus=true) }}
+      {{ render_field(form.email, placeholder="you@example.com") }}
+      {{ render_password_field(form.password, placeholder="At least 6 characters", toggle_id="togglePw") }}
+      {{ render_password_field(form.confirm_password, placeholder="Repeat your password", toggle_id="toggleConfirmPw") }}
+      {{ render_submit("Create Account", "btn btn-primary w-100") }}
     </form>
 
     <p class="ttb-meta text-center mt-3 mb-0">
@@ -57,10 +29,17 @@
 </main>
 
 <script>
-  document.getElementById('togglePw').addEventListener('click', function () {
-    var i = document.querySelector('input[name=password]'), show = i.type === 'password';
-    i.type = show ? 'text' : 'password';
-    this.innerHTML = '<i class="bi bi-' + (show ? 'eye-slash' : 'eye') + '"></i>';
-  });
+  function bindToggle(btnId) {
+    var btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var input = btn.closest('.input-group').querySelector('input');
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      btn.innerHTML = '<i class="bi bi-' + (show ? 'eye-slash' : 'eye') + '"></i>';
+    });
+  }
+  bindToggle('togglePw');
+  bindToggle('toggleConfirmPw');
 </script>
 {% endblock %}

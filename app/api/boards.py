@@ -15,7 +15,7 @@ from flask import jsonify
 from flask_login import current_user
 
 from app.api import api
-from app.api.board_forms import BoardForm, AddMemberForm, UpdateMemberRoleForm
+from app.api.forms import BoardForm, AddMemberForm, UpdateMemberRoleForm
 from app.api.guards import (
     ApiError, board_context, json_body, require,
     can_manage_board, can_manage_members, can_remove_member,

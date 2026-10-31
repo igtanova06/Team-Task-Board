@@ -1,4 +1,4 @@
-﻿import os
+import os
 from flask import Flask
 from config import config_by_name
 from app.extensions import db, migrate
@@ -22,7 +22,7 @@ def create_app(config_name=None):
 
     init_web(app)   # web UI: session login, CSRF, pages, error handlers
 
-    # Member 2: JWT & Auth blueprint
+    # JWT & Auth blueprint
     app.config.setdefault("JWT_SECRET_KEY", app.config.get("SECRET_KEY"))
     from app.extensions import jwt
     jwt.init_app(app)
@@ -30,10 +30,9 @@ def create_app(config_name=None):
     from app.auth import auth as auth_bp
     app.register_blueprint(auth_bp)
 
-    # Member 2 - Tieu chi 6: RBAC demo routes (prefix /m2/api)
-    from app.auth.member2_routes import m2_api
-    app.register_blueprint(m2_api, url_prefix='/m2/api')
+    # Tiêu chí 6: RBAC routes (/api/rbac and /m2/api compatibility)
+    from app.auth.rbac_routes import rbac_api
+    app.register_blueprint(rbac_api, url_prefix='/api/rbac')
+    app.register_blueprint(rbac_api, url_prefix='/m2/api', name='rbac_api_compat')
 
     return app
-
-

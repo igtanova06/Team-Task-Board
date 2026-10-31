@@ -1,7 +1,7 @@
-﻿"""
+"""
 app/auth/jwt_helpers.py
 
-JWT Bearer Authentication - Tách biệt hoàn toàn khỏi Flask-Login session.
+JWT Bearer Authentication & Helpers - Tách biệt hoàn toàn khỏi Flask-Login session.
 - Flask-Login session: Dành cho trình duyệt web (cookie-based).
 - JWT Bearer Token: Dành cho REST API clients (Authorization: Bearer <token>), stateless, KHÔNG tạo session cookie.
 """
@@ -11,6 +11,34 @@ from flask_jwt_extended import decode_token
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 from app.extensions import db
+from app.main.setup import login_manager
+
+
+@login_manager.request_loader
+def load_user_from_bearer(req):
+    """
+    Trả về User nếu request có `Authorization: Bearer <jwt>`, ngược lại None.
+    Được Flask-Login gọi khi session không có user. Giúp API request hoàn toàn stateless
+    không sinh cookie session.
+    """
+    header = req.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        return None
+    token = header.split(" ", 1)[1].strip()
+    if not token:
+        return None
+    try:
+        decoded = decode_token(token)
+        uid = decoded.get("sub")
+        if uid is None:
+            return None
+        from app.models import User
+        user = db.session.get(User, int(uid))
+    except Exception:
+        return None
+    if user is not None:
+        g.jwt_user, g.jwt_user_id, g.jwt_claims = user, user.id, decoded
+    return user
 
 
 def get_jwt_user():

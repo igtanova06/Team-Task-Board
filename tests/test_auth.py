@@ -17,16 +17,16 @@ def test_register_creates_user_in_db(app):
     client = app.test_client()
     with app.app_context():
         res = client.post('/register', data={
-            'username': 'member2_user',
-            'email': 'member2@example.com',
+            'username': 'auth_demo_user',
+            'email': 'auth_demo@example.com',
             'password': 'Password123',
             'confirm_password': 'Password123'
         }, follow_redirects=True)
         assert res.status_code == 200
 
-        user = User.query.filter_by(username='member2_user').first()
+        user = User.query.filter_by(username='auth_demo_user').first()
         assert user is not None
-        assert user.email == 'member2@example.com'
+        assert user.email == 'auth_demo@example.com'
         assert user.password_hash != 'Password123'
         assert user.check_password('Password123') is True
         assert user.check_password('WrongPassword') is False

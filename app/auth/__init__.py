@@ -1,11 +1,15 @@
 from flask import Blueprint
-#  JWT Bearer stateless cho /api (khong tao session cookie)
-from app.auth import stateless_jwt  # noqa: E402,F401
+
 auth = Blueprint('auth', __name__)
 
-from app.auth import routes
-from app.auth.jwt_helpers import jwt_api_required, get_jwt_user, get_jwt_user_id
-from app.auth.rbac import (
+from app.auth import routes  # noqa: E402,F401
+from app.auth.jwt_helpers import (  # noqa: E402,F401
+    jwt_api_required,
+    get_jwt_user,
+    get_jwt_user_id,
+    load_user_from_bearer,
+)
+from app.auth.rbac import (  # noqa: E402,F401
     board_role_required,
     role_required,
     owner_required,
@@ -13,4 +17,9 @@ from app.auth.rbac import (
     viewer_required,
     get_request_user,
 )
-from app.auth.sanitizer import clean_text, clean_html, sanitize_task, sanitize_comment
+from app.auth.sanitizer import (  # noqa: E402,F401
+    clean_text,
+    clean_html,
+    sanitize_task,
+    sanitize_comment,
+)

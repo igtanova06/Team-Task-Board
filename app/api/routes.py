@@ -7,7 +7,7 @@ from app.api.guards import (
     ApiError, can_change_status,
 )
 from app.api.serializers import task_dict, comment_dict, iso
-from app.api.task_forms import StatusForm, CommentForm
+from app.api.forms import StatusForm, CommentForm
 from app.extensions import db
 from app.models import Task, Comment
 from app.models.task import TaskStatus

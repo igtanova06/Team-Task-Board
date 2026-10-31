@@ -17,7 +17,7 @@ from app.api.guards import (
     can_create_task, can_edit_task, can_reassign_task, can_delete_task, is_board_member,
 )
 from app.api.serializers import task_dict, comment_dict, user_dict
-from app.api.task_forms import TaskForm
+from app.api.forms import TaskForm
 from app.extensions import db
 from app.models import BoardMembership, Task
 
