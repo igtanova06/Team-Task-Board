@@ -192,7 +192,6 @@
     if (!list.boards.length) {
       grid.innerHTML = `<div class="ttb-empty"><i class="bi bi-kanban display-5 text-primary"></i>
         <h2 class="h6 fw-bold mt-2 text-body">You are not on any board yet</h2>
-        <p class="mb-3">Create your first board, or ask a board owner to add you. Empty database? Run <code>python seed.py</code> and sign in as <code>alex</code>.</p>
         <button class="btn btn-primary" data-act="new"><i class="bi bi-plus-lg me-1"></i>Create board</button></div>`;
     } else if (!shown.length) {
       grid.innerHTML = `<div class="ttb-empty">No board matches “${esc(q)}”.</div>`;
