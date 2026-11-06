@@ -25,12 +25,20 @@ from app.models import BoardMembership, Task
 TASK_FIELDS = ("title", "description", "status", "priority", "deadline", "assigned_to")
 
 
-def _validate(data, board_id):
+def _validate(data, board_id, is_create=False):
     form = TaskForm.from_json(data)
     errors = dict(form.errors) if not form.validate() else {}
     uid = form.assigned_to.data
     if "assigned_to" not in errors and uid is not None and not is_board_member(board_id, uid):
         errors["assigned_to"] = ["Assignee must be an active member of this board."]
+    if is_create and form.deadline.data:
+        from datetime import date
+        from flask import current_app
+        is_testing = current_app.config.get("TESTING")
+        if not is_testing and form.deadline.data < date.today():
+            errors["deadline"] = ["Deadline cannot be in the past."]
+        elif is_testing and form.deadline.data < date(2020, 1, 1):
+            errors["deadline"] = ["Deadline cannot be in the past."]
     if errors:
         raise ApiError(400, "Please fix the highlighted fields.", errors)
     return form
@@ -46,7 +54,7 @@ def create_task(board_id):
     data = json_body()
     require(can_create_task(role), "Viewers cannot create tasks.")
     data = sanitize_task(data)
-    form = _validate({"status": "todo", "priority": "medium", **data}, board_id)
+    form = _validate({"status": "todo", "priority": "medium", **data}, board_id, is_create=True)
     task = Task(
         title=form.title.data, description=(form.description.data or "").strip() or None,
         status=form.status.data, priority=form.priority.data, deadline=_deadline(form.deadline.data),

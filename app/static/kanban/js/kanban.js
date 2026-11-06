@@ -314,7 +314,11 @@
     if (!title) errors.title = ["Title is required."];
     else if (title.length > 200) errors.title = ["Title must be 200 characters or fewer."];
     if (F.description.value.length > 2000) errors.description = ["Description must be 2000 characters or fewer."];
-    if (F.deadline.value && !/^\d{4}-\d{2}-\d{2}$/.test(F.deadline.value)) errors.deadline = ["Enter a valid date."];
+    if (F.deadline.value && !/^\d{4}-\d{2}-\d{2}$/.test(F.deadline.value)) {
+      errors.deadline = ["Enter a valid date."];
+    } else if (!editingId && F.deadline.value && F.deadline.value < todayISO()) {
+      errors.deadline = ["Deadline cannot be in the past."];
+    }
     return errors;
   }
   function openForm(task, defaultStatus) {
@@ -330,6 +334,11 @@
     F.priority.value = task ? task.priority : "medium";
     F.assigned_to.value = task && task.assigned_to ? String(task.assigned_to) : "";
     F.deadline.value = task && task.deadline ? task.deadline : "";
+    if (!task) {
+      F.deadline.min = todayISO();
+    } else {
+      F.deadline.removeAttribute("min");
+    }
     F.assigned_to.disabled = !!task && !can(task, "reassign");
     F.assigned_to.title = F.assigned_to.disabled ? "Only the owner or the task's creator can reassign it" : "";
     $("#fTitleCount").textContent = `${F.title.value.length}/200`;

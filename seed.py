@@ -83,7 +83,7 @@ def seed():
             deadline=now + timedelta(days=offset_days),
             board_id=board.id,
             assigned_to=users[assignee_name].id,
-            created_by=users["Alex"].id,
+            created_by=users[assignee_name].id,
         )
         db.session.add(task)
         tasks.append(task)
