@@ -8,6 +8,7 @@ from app.api.guards import (
 )
 from app.api.serializers import task_dict, comment_dict, iso
 from app.api.forms import StatusForm, CommentForm
+from app.auth.sanitizer import sanitize_comment
 from app.extensions import db
 from app.models import Task, Comment
 from app.models.task import TaskStatus
@@ -45,6 +46,7 @@ def update_status(task_id):
 def add_comment(task_id):
     task, _ = task_context(task_id)          # any active member (owner / member / viewer) may comment
     data = json_body()
+    data = sanitize_comment(data)
     form = CommentForm.from_json(data)
     if not form.validate():
         raise ApiError(400, "Comment content is required", form.errors)

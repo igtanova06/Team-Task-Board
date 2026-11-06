@@ -136,14 +136,14 @@ def sanitize_task(data: dict) -> dict:
         data = sanitize_task(request.get_json())
 
     Các trường được xử lý:
-        title       → clean_text  (plain text, max 200 ký tự)
-        description → clean_html  (rich text, max 2000 ký tự)
+        title       → clean_text  (plain text, loại bỏ XSS / tags)
+        description → clean_html  (rich text, giữ định dạng an toàn b/i/code/a)
     """
     cleaned = dict(data or {})
-    if "title" in cleaned:
-        cleaned["title"] = clean_text(cleaned["title"], max_length=200)
-    if "description" in cleaned:
-        cleaned["description"] = clean_html(cleaned["description"], max_length=2000)
+    if "title" in cleaned and isinstance(cleaned["title"], str):
+        cleaned["title"] = clean_text(cleaned["title"])
+    if "description" in cleaned and isinstance(cleaned["description"], str):
+        cleaned["description"] = clean_html(cleaned["description"])
     return cleaned
 
 
@@ -156,9 +156,9 @@ def sanitize_comment(data: dict) -> dict:
         data = sanitize_comment(request.get_json())
 
     Các trường được xử lý:
-        content → clean_html (rich text, max 1000 ký tự)
+        content → clean_html (rich text, giữ định dạng an toàn b/i/code/a)
     """
     cleaned = dict(data or {})
-    if "content" in cleaned:
-        cleaned["content"] = clean_html(cleaned["content"], max_length=1000)
+    if "content" in cleaned and isinstance(cleaned["content"], str):
+        cleaned["content"] = clean_html(cleaned["content"])
     return cleaned

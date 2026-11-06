@@ -18,6 +18,7 @@ from app.api.guards import (
 )
 from app.api.serializers import task_dict, comment_dict, user_dict
 from app.api.forms import TaskForm
+from app.auth.sanitizer import sanitize_task
 from app.extensions import db
 from app.models import BoardMembership, Task
 
@@ -44,6 +45,7 @@ def create_task(board_id):
     _, role = board_context(board_id)
     data = json_body()
     require(can_create_task(role), "Viewers cannot create tasks.")
+    data = sanitize_task(data)
     form = _validate({"status": "todo", "priority": "medium", **data}, board_id)
     task = Task(
         title=form.title.data, description=(form.description.data or "").strip() or None,
@@ -69,6 +71,7 @@ def update_task(task_id):
     data = json_body()
     require(can_edit_task(role, task, current_user.id),
             "Only the owner, or a member who created or is assigned to the task, can edit it.")
+    data = sanitize_task(data)
 
     merged = {
         "title": task.title, "description": task.description or "", "status": task.status,

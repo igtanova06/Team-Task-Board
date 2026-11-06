@@ -28,3 +28,4 @@ def board(board_id):
     if board is None or m is None:
         abort(404)                      # same answer for "missing" and "not a member"
     return render_template("kanban/board.html", board=board, role=m.role)
+

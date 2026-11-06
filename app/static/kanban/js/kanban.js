@@ -424,7 +424,12 @@
     });
     $("#detailModal").addEventListener("hidden.bs.modal", () => { detailId = null; });
     $("#taskForm").addEventListener("submit", submitForm);
-    F.title.addEventListener("input", () => { $("#fTitleCount").textContent = `${F.title.value.length}/200`; F.title.classList.remove("is-invalid"); });
+    F.title.addEventListener("input", () => {
+      const len = F.title.value.length;
+      $("#fTitleCount").textContent = `${len}/200`;
+      $("#fTitleCount").classList.toggle("text-danger", len > 200);
+      F.title.classList.remove("is-invalid");
+    });
     $("#formModal").addEventListener("shown.bs.modal", () => F.title.focus());
 
     const refilter = () => { STATUSES.forEach((s) => renderCards(s.key)); };

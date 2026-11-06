@@ -129,7 +129,12 @@
   function bindBoardModal() {
     if (!bm.el) return;
     bm.form.addEventListener("submit", submitBoard);
-    bm.name.addEventListener("input", () => { bm.count.textContent = `${bm.name.value.length}/100`; bm.name.classList.remove("is-invalid"); });
+    bm.name.addEventListener("input", () => {
+    const len = bm.name.value.length;
+    bm.count.textContent = `${len}/100`;
+    bm.count.classList.toggle("text-danger", len > 100);
+    bm.name.classList.remove("is-invalid");
+  });
     bm.el.addEventListener("shown.bs.modal", () => bm.name.focus());
     bm.delArea.addEventListener("click", (e) => {
       const b = e.target.closest("[data-act]"); if (!b) return;

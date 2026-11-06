@@ -8,8 +8,8 @@ class Board(db.Model):
     __tablename__ = "boards"
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
+    name = db.Column(db.Unicode(100), nullable=False)
+    description = db.Column(db.UnicodeText, nullable=True)
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
     updated_at = db.Column(db.DateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
