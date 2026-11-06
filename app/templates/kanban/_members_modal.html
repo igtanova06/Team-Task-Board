@@ -1,0 +1,27 @@
+<!-- Board members: list, invite, change role, remove / leave. Driven by boards.js (Fetch -> /api/boards/<id>/members). -->
+<div class="modal fade" id="membersModal" tabindex="-1" aria-labelledby="membersTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h6 fw-semibold" id="membersTitle">Members <span class="ttb-count" id="membersCount">0</span></h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="inviteForm" class="ttb-invite d-none" novalidate>
+          <label class="form-label" for="inviteIdentity">Invite by username or email</label>
+          <div class="d-flex flex-wrap gap-2">
+            <input id="inviteIdentity" class="form-control flex-grow-1" style="min-width:150px;flex-basis:0" placeholder="e.g. ben" autocomplete="off">
+            <select id="inviteRole" class="form-select" style="width:auto" aria-label="Role">
+              <option value="member" selected>Member</option><option value="viewer">Viewer</option><option value="owner">Owner</option>
+            </select>
+            <button class="btn btn-primary" type="submit" id="inviteBtn"><i class="bi bi-person-plus me-1"></i>Invite</button>
+          </div>
+          <div class="text-danger small mt-1 d-none" id="inviteError" role="alert"></div>
+        </form>
+        <ul class="ttb-member-list list-unstyled mb-0" id="memberList"></ul>
+        <p class="ttb-meta mt-3 mb-0">Owner: manage board &amp; members. Member: create and work on tasks. Viewer: read-only, can comment.</p>
+      </div>
+      <div class="modal-footer"><button class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+    </div>
+  </div>
+</div>

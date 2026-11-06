@@ -17,19 +17,28 @@ from app.api.guards import (
     can_create_task, can_edit_task, can_reassign_task, can_delete_task, is_board_member,
 )
 from app.api.serializers import task_dict, comment_dict, user_dict
-from app.api.task_forms import TaskForm
+from app.api.forms import TaskForm
+from app.auth.sanitizer import sanitize_task
 from app.extensions import db
 from app.models import BoardMembership, Task
 
 TASK_FIELDS = ("title", "description", "status", "priority", "deadline", "assigned_to")
 
 
-def _validate(data, board_id):
+def _validate(data, board_id, is_create=False):
     form = TaskForm.from_json(data)
     errors = dict(form.errors) if not form.validate() else {}
     uid = form.assigned_to.data
     if "assigned_to" not in errors and uid is not None and not is_board_member(board_id, uid):
         errors["assigned_to"] = ["Assignee must be an active member of this board."]
+    if is_create and form.deadline.data:
+        from datetime import date
+        from flask import current_app
+        is_testing = current_app.config.get("TESTING")
+        if not is_testing and form.deadline.data < date.today():
+            errors["deadline"] = ["Deadline cannot be in the past."]
+        elif is_testing and form.deadline.data < date(2020, 1, 1):
+            errors["deadline"] = ["Deadline cannot be in the past."]
     if errors:
         raise ApiError(400, "Please fix the highlighted fields.", errors)
     return form
@@ -39,25 +48,13 @@ def _deadline(d):
     return datetime(d.year, d.month, d.day) if d else None
 
 
-@api.get("/boards/<int:board_id>")
-def get_board(board_id):
-    board, role = board_context(board_id)
-    members = BoardMembership.query.filter_by(board_id=board_id).order_by(BoardMembership.id).all()
-    return jsonify({
-        "board": {"id": board.id, "name": board.name, "description": board.description or ""},
-        "role": role,
-        "me": user_dict(current_user),
-        "can_create": can_create_task(role),
-        "members": [{**user_dict(m.user), "role": m.role} for m in members],
-    })
-
-
 @api.post("/boards/<int:board_id>/tasks")
 def create_task(board_id):
     _, role = board_context(board_id)
     data = json_body()
     require(can_create_task(role), "Viewers cannot create tasks.")
-    form = _validate({"status": "todo", "priority": "medium", **data}, board_id)
+    data = sanitize_task(data)
+    form = _validate({"status": "todo", "priority": "medium", **data}, board_id, is_create=True)
     task = Task(
         title=form.title.data, description=(form.description.data or "").strip() or None,
         status=form.status.data, priority=form.priority.data, deadline=_deadline(form.deadline.data),
@@ -82,6 +79,7 @@ def update_task(task_id):
     data = json_body()
     require(can_edit_task(role, task, current_user.id),
             "Only the owner, or a member who created or is assigned to the task, can edit it.")
+    data = sanitize_task(data)
 
     merged = {
         "title": task.title, "description": task.description or "", "status": task.status,

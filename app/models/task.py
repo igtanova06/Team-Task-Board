@@ -21,8 +21,8 @@ class Task(db.Model):
     __tablename__ = "tasks"
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=True)
+    title = db.Column(db.Unicode(200), nullable=False)
+    description = db.Column(db.UnicodeText, nullable=True)
     status = db.Column(db.String(20), nullable=False, default=TaskStatus.TODO, index=True)
     priority = db.Column(db.String(20), nullable=False, default=TaskPriority.MEDIUM)
     deadline = db.Column(db.DateTime, nullable=True)

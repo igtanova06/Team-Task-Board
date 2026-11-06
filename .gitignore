@@ -6,3 +6,12 @@ __pycache__/
 instance/
 .pytest_cache/
 .agents/rules/
+.venv/
+ponytail/
+.ponytail
+
+# Test runner scripts & results
+test_payloads.py
+test_security.py
+test_results.json
+security_results.json

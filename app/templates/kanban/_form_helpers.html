@@ -1,0 +1,81 @@
+﻿{# 
+  app/templates/kanban/_form_helpers.html
+  Jinja2 Reusable Form Macros - Tiêu chí 2 (Rubric PWD301: Jinja2 macros for reusable components)
+#}
+
+{% macro render_field(field, placeholder="", autofocus=false, class_extra="") %}
+<div class="mb-3">
+  {{ field.label(class="form-label") }}
+  {{ field(class="form-control " ~ class_extra ~ (" is-invalid" if field.errors else ""), 
+           placeholder=placeholder, 
+           autofocus=autofocus) }}
+  {% if field.errors %}
+    {% for error in field.errors %}
+      <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_password_field(field, placeholder="Enter password", toggle_id="togglePw") %}
+<div class="mb-3">
+  {{ field.label(class="form-label") }}
+  <div class="input-group has-validation">
+    {{ field(class="form-control" ~ (" is-invalid" if field.errors else ""), 
+             placeholder=placeholder, 
+             autocomplete="current-password") }}
+    {% if toggle_id %}
+      <button class="btn btn-secondary" type="button" id="{{ toggle_id }}" aria-label="Show password">
+        <i class="bi bi-eye"></i>
+      </button>
+    {% endif %}
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+
+{% macro render_textarea(field, rows=3, placeholder="") %}
+<div class="mb-3">
+  {{ field.label(class="form-label") }}
+  {{ field(class="form-control" ~ (" is-invalid" if field.errors else ""), 
+           rows=rows, 
+           placeholder=placeholder) }}
+  {% if field.errors %}
+    {% for error in field.errors %}
+      <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endfor %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_checkbox(field) %}
+<div class="form-check mb-3">
+  {{ field(class="form-check-input") }}
+  {{ field.label(class="form-check-label small") }}
+</div>
+{% endmacro %}
+
+
+{% macro render_submit(label="Submit", btn_class="btn btn-primary w-100") %}
+<button class="{{ btn_class }}" type="submit">{{ label }}</button>
+{% endmacro %}
+
+
+{% macro render_flashes() %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat if cat != 'message' else 'info' }} py-2 small" role="alert">
+          {{ msg }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+{% endmacro %}

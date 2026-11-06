@@ -66,7 +66,8 @@ def test_create_defaults(app, world):
 @pytest.mark.parametrize("payload,field", [
     ({}, "title"), ({"title": "   "}, "title"), ({"title": "x" * 201}, "title"),
     ({"title": "ok", "priority": "urgent"}, "priority"), ({"title": "ok", "status": "blocked"}, "status"),
-    ({"title": "ok", "deadline": "10/12/2026"}, "deadline"), ({"title": "ok", "assigned_to": "abc"}, "assigned_to"),
+    ({"title": "ok", "deadline": "10/12/2026"}, "deadline"), ({"title": "ok", "deadline": "2019-01-01"}, "deadline"),
+    ({"title": "ok", "assigned_to": "abc"}, "assigned_to"),
     ({"title": "ok", "assigned_to": 99999}, "assigned_to"),
 ])
 def test_create_validation(app, world, payload, field):

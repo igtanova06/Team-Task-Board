@@ -314,7 +314,11 @@
     if (!title) errors.title = ["Title is required."];
     else if (title.length > 200) errors.title = ["Title must be 200 characters or fewer."];
     if (F.description.value.length > 2000) errors.description = ["Description must be 2000 characters or fewer."];
-    if (F.deadline.value && !/^\d{4}-\d{2}-\d{2}$/.test(F.deadline.value)) errors.deadline = ["Enter a valid date."];
+    if (F.deadline.value && !/^\d{4}-\d{2}-\d{2}$/.test(F.deadline.value)) {
+      errors.deadline = ["Enter a valid date."];
+    } else if (!editingId && F.deadline.value && F.deadline.value < todayISO()) {
+      errors.deadline = ["Deadline cannot be in the past."];
+    }
     return errors;
   }
   function openForm(task, defaultStatus) {
@@ -330,6 +334,11 @@
     F.priority.value = task ? task.priority : "medium";
     F.assigned_to.value = task && task.assigned_to ? String(task.assigned_to) : "";
     F.deadline.value = task && task.deadline ? task.deadline : "";
+    if (!task) {
+      F.deadline.min = todayISO();
+    } else {
+      F.deadline.removeAttribute("min");
+    }
     F.assigned_to.disabled = !!task && !can(task, "reassign");
     F.assigned_to.title = F.assigned_to.disabled ? "Only the owner or the task's creator can reassign it" : "";
     $("#fTitleCount").textContent = `${F.title.value.length}/200`;
@@ -378,6 +387,8 @@
         api("GET", `/api/boards/${BOARD_ID}`), api("GET", `/api/boards/${BOARD_ID}/tasks`)]);
       Object.assign(state, { board: info.board, role: info.role, me: info.me, members: info.members, canCreate: info.can_create, tasks });
       $("#memberStack").innerHTML = state.members.map((m) => `<span class="ttb-avatar ${colorFor(m.id)}" title="${esc(m.username)} (${esc(m.role)})">${esc(initials(m.username))}</span>`).join("");
+      $("#filterMember").innerHTML = '<option value="all">All Members</option>';
+      filters.member = "all";
       $("#filterMember").insertAdjacentHTML("beforeend", state.members.map((m) => `<option value="${m.id}">${esc(m.username)}</option>`).join(""));
       renderBoard();
     } catch (err) {
@@ -422,7 +433,12 @@
     });
     $("#detailModal").addEventListener("hidden.bs.modal", () => { detailId = null; });
     $("#taskForm").addEventListener("submit", submitForm);
-    F.title.addEventListener("input", () => { $("#fTitleCount").textContent = `${F.title.value.length}/200`; F.title.classList.remove("is-invalid"); });
+    F.title.addEventListener("input", () => {
+      const len = F.title.value.length;
+      $("#fTitleCount").textContent = `${len}/200`;
+      $("#fTitleCount").classList.toggle("text-danger", len > 200);
+      F.title.classList.remove("is-invalid");
+    });
     $("#formModal").addEventListener("shown.bs.modal", () => F.title.focus());
 
     const refilter = () => { STATUSES.forEach((s) => renderCards(s.key)); };
@@ -434,6 +450,9 @@
       $("#filterSearch").value = ""; $("#filterMember").value = "all"; $("#filterPriority").value = "all"; refilter();
     });
   }
+
+  // member list changed in the Members dialog (invite / role / remove): refresh assignees, avatars and cards
+  window.addEventListener("ttb:members-changed", load);
 
   document.addEventListener("DOMContentLoaded", () => { bind(); load(); });
 })();

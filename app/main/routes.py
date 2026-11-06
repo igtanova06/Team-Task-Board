@@ -10,10 +10,14 @@ from app.models import Board, BoardMembership
 @main.get("/")
 @login_required
 def index():
-    m = BoardMembership.query.filter_by(user_id=current_user.id).order_by(BoardMembership.id).first()
-    if m is None:
-        return render_template("kanban/no_board.html")
-    return redirect(url_for("main.board", board_id=m.board_id))
+    return redirect(url_for("main.boards"))
+
+
+@main.get("/boards")
+@login_required
+def boards():
+    """Board list page. The list itself is loaded by the browser from GET /api/boards."""
+    return render_template("kanban/boards.html")
 
 
 @main.get("/boards/<int:board_id>")
@@ -24,3 +28,4 @@ def board(board_id):
     if board is None or m is None:
         abort(404)                      # same answer for "missing" and "not a member"
     return render_template("kanban/board.html", board=board, role=m.role)
+
